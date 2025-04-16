@@ -21,14 +21,12 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # 读取环境变量
-FASTGPT_BASE_URL = os.getenv('FASTGPT_BASE_URL', 'http://127.0.0.1:3000')
-DATASET_SEARCH_USING_EXTENSION = os.getenv('DATASET_SEARCH_USING_EXTENSION', 'false').lower() == 'true'
-DATASET_SEARCH_EXTENSION_MODEL = os.getenv('DATASET_SEARCH_EXTENSION_MODEL', 'gpt-4-mini')
-DATASET_SEARCH_EXTENSION_BG = os.getenv('DATASET_SEARCH_EXTENSION_BG', '')
-DATASET_SEARCH_USING_RERANK = os.getenv('DATASET_SEARCH_USING_RERANK', 'false').lower() == 'true'
-DATASET_SEARCH_MODE = os.getenv('DATASET_SEARCH_MODE', 'embedding')
-FASTGPT_TIMEOUT = int(os.getenv('FASTGPT_TIMEOUT', 30))  # FastGPT API 超时
-API_KEY = os.getenv('API_KEY')  # fastgpt认证密钥
+GETBIJI_BASE_URL = os.getenv('GETBIJI_BASE_URL', 'https://open-api.biji.com/getnote/openapi')
+GETBIJI_TIMEOUT = int(os.getenv('GETBIJI_TIMEOUT', 30))  # GETBiji API 超时
+DATASET_INTENT_REWRITE = os.getenv('DATASET_INTENT_REWRITE', 'false').lower() == 'true'
+DATASET_SELECT_MATRIX = os.getenv('DATASET_SELECT_MATRIX', 'true').lower() == 'true'
+
+API_KEY = os.getenv('API_KEY')  # GetBiji认证密钥
 
 def validate_api_key(auth_header):
     """验证 API 密钥"""
@@ -58,8 +56,8 @@ def retrieval():
         return jsonify({'error_code': 400, 'error_msg': '请求 JSON 解析失败'}), 400
 
     # 提取参数
-    knowledge_id = dify_request.get('knowledge_id')
     query = dify_request.get('query')
+    knowledge_id = dify_request.get('knowledge_id')
     retrieval_setting = dify_request.get('retrieval_setting', {})
 
     if not knowledge_id or not query:
@@ -70,71 +68,68 @@ def retrieval():
     top_k = retrieval_setting.get('top_k', 5)
     score_threshold = retrieval_setting.get('score_threshold', 0.5)
 
-    # 构建 FastGPT 请求
-    fastgpt_request = {
-        'datasetId': knowledge_id,
-        'text': query,
-        'limit': top_k * 500,
-        'similarity': score_threshold,
-        'searchMode': DATASET_SEARCH_MODE,
-        'usingReRank': DATASET_SEARCH_USING_RERANK,
-        'datasetSearchUsingExtensionQuery': DATASET_SEARCH_USING_EXTENSION,
-        'datasetSearchExtensionModel': DATASET_SEARCH_EXTENSION_MODEL,
-        'datasetSearchExtensionBg': DATASET_SEARCH_EXTENSION_BG
+    # 构建知识库API请求
+    knowledge_request = {
+        'question': query,
+        'topic_ids': [knowledge_id],
+        'intent_rewrite': DATASET_INTENT_REWRITE,
+        'select_matrix': DATASET_SELECT_MATRIX
     }
 
-    headers = {'Authorization': auth_header, 'Content-Type': 'application/json'}
-    fastgpt_url = f"{FASTGPT_BASE_URL}/api/core/dataset/searchTest"
+    headers = {
+        'Authorization': auth_header,
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'X-OAuth-Version': '1'
+    }
+    knowledge_url = f"{GETBIJI_BASE_URL}/knowledge/search/recall"
     
     # 发送请求（支持指数退避策略）
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = requests.post(fastgpt_url, headers=headers, json=fastgpt_request, timeout=FASTGPT_TIMEOUT)
+            response = requests.post(knowledge_url, headers=headers, json=knowledge_request, timeout=GETBIJI_TIMEOUT)
             if response.status_code == 200:
-                fastgpt_response = response.json()
-                logger.info(f'FastGPT 响应成功，耗时: {time.time() - start_time:.2f}s')
-                return jsonify(format_fastgpt_response(fastgpt_response))
+                knowledge_response = response.json()
+                logger.info(f'知识库API 响应成功，耗时: {time.time() - start_time:.2f}s')
+                return jsonify(format_knowledge_response(knowledge_response))
             
             elif response.status_code in {401, 403}:
-                logger.warning(f'FastGPT API 认证失败，IP: {client_ip}')
+                logger.warning(f'知识库API 认证失败，IP: {client_ip}')
                 return jsonify({'error_code': 1002, 'error_msg': '授权失败'}), 403
 
-            logger.error(f'FastGPT API 错误: {response.status_code}，内容: {response.text}')
-            return jsonify({'error_code': 500, 'error_msg': f'FastGPT API 错误 {response.status_code}'}), 500
+            logger.error(f'知识库API 错误: {response.status_code}，内容: {response.text}')
+            return jsonify({'error_code': 500, 'error_msg': f'知识库API 错误 {response.status_code}'}), 500
 
         except requests.exceptions.RequestException as e:
-            logger.error(f'FastGPT API 请求失败: {str(e)}，第 {attempt+1} 次重试')
+            logger.error(f'知识库API 请求失败: {str(e)}，第 {attempt+1} 次重试')
             time.sleep(2 ** attempt)  # 指数退避策略
 
-    return jsonify({'error_code': 500, 'error_msg': 'FastGPT API 请求失败'}), 500
+    return jsonify({'error_code': 500, 'error_msg': '知识库API 请求失败'}), 500
 
-def format_fastgpt_response(fastgpt_response):
-    """格式化 FastGPT 响应为 Dify 格式"""
+def format_knowledge_response(knowledge_response):
+    """格式化知识库API响应为Dify格式"""
     records = []
-    data_list = fastgpt_response.get('data', {}).get('list', [])
+    data_list = knowledge_response.get('c', {}).get('data', [])
 
     for item in data_list:
         if not isinstance(item, dict):
             logger.warning(f'跳过非字典类型数据: {item}')
             continue
 
-        content = f"{item.get('q', '')}\n{item.get('a', '')}".strip()
-        score = next((s.get('value', 0) for s in item.get('score', []) if isinstance(s, dict) and s.get('type') == 'embedding'), 0)
-
         records.append({
-            'content': content,
-            'score': score,
-            'title': item.get('sourceName', 'Unknown'),
+            'content': item.get('content', ''),
+            'score': item.get('score', 0),
+            'title': item.get('title', 'Unknown'),
             'metadata': {
-                'path': f"fastgpt://{item.get('collectionId', '')}",
-                'source_id': item.get('sourceId', ''),
-                'chunk_index': item.get('chunkIndex', 0)
+                'path': f"knowledge://{item.get('id', '')}",
+                'type': item.get('type', ''),
+                'recall_source': item.get('recall_source', '')
             }
         })
 
     return {'records': records}
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 6000))
     app.run(host='0.0.0.0', port=port)
