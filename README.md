@@ -1,5 +1,8 @@
+# 前人栽树后人乘凉
+此代码根据kangarooking/fastgpt-dify-adapter修改而来，感谢这位兄弟
+
 # getbiji-dify-adapter
-dify外接得到Get知识库的工具
+Dify外接得到Get知识库的工具
 
 # **📌 `.env` 配置文件说明**
 本文件用于配置 **得到Get笔记 Dify 适配器** 的环境变量，所有运行时参数均可通过 `.env` 配置，无需修改代码。  
