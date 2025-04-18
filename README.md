@@ -2,10 +2,10 @@
 此代码根据kangarooking/fastgpt-dify-adapter修改而来，感谢这位兄弟
 
 # getbiji-dify-adapter
-Dify外接得到Get知识库的工具
+Dify外接得到Get笔记知识库的工具
 
 # **📌 `.env` 配置文件说明**
-本文件用于配置 **得到Get笔记 Dify 适配器** 的环境变量，所有运行时参数均可通过 `.env` 配置，无需修改代码。  
+本文件用于配置 **得到Get笔记知识库 Dify 适配器** 的环境变量，所有运行时参数均可通过 `.env` 配置，无需修改代码。  
 适用于 **Docker部署** 和 **本地开发**，确保灵活性和可维护性。
 
 ---
@@ -32,11 +32,10 @@ GUNICORN_TIMEOUT=60
 ### **🤖 3. Get笔记 相关配置**
 | 变量 | 说明                                                            | 默认值 |
 |------|---------------------------------------------------------------|----|
-| `GETBIJI_BASE_URL` | Get笔记 基础 API 地址                                   | `https://open-api.biji.com/getnote/openapi` |
-| `GETBIJI_TIMEOUT` | Get笔记 API 请求超时时间（秒）                            | `30` |
-| `DATASET_INTENT_REWRITE` | 是否开启问题优化 (`true/false`)                   | `true` |
+| `GETBIJI_BASE_URL` | 得到Get笔记 基础 API 地址    | `https://open-api.biji.com/getnote/openapi` |
+| `GETBIJI_TIMEOUT` | 得到Get笔记 API 请求超时时间（秒）       | `30` |
+| `DATASET_INTENT_REWRITE` | 是否开启问题优化 (`true/false`)    | `true` |
 | `DATASET_SELECT_MATRIX` | 是否使用 Get笔记 重新排序（ReRank）（`true/false`）   | `true` |
-| `DATASET_SEARCH_USING_RERANK` | 是否使用 ReRank 重新排序 (`true/false`)      | `true` |
 
 📌 **示例：**
 ```ini
