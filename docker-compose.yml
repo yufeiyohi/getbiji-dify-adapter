@@ -1,6 +1,9 @@
 services:
   getbiji-dify-adapter:
     container_name: getbiji-dify-adapter
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "$PORT:$PORT"
     image: yufeiyohi/getbiji-dify-adapter:latest

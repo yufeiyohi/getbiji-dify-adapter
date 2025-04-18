@@ -161,9 +161,6 @@ def format_knowledge_response(knowledge_response):
 
     return {'records': records}
 
-# 导出WSGI应用
-application = app
-
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 6000))
     app.run(host='0.0.0.0', port=port)
