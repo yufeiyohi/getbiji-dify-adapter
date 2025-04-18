@@ -16,4 +16,4 @@ RUN apt-get update \
 # 设置时区
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-6000} --access-logfile - --error-logfile - app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-6000} --access-logfile - --error-logfile - app:application"]
