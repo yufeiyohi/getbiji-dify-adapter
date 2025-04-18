@@ -104,11 +104,14 @@ version: '3'
 services:
   getbiji-dify-adapter:
     container_name: getbiji-dify-adapter
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "$PORT:$PORT"
     image: yufeiyohi/getbiji-dify-adapter:latest
     env_file:
       - .env
-    ports:
-      - "${PORT}:${PORT}"
     restart: unless-stopped
 ```
 
