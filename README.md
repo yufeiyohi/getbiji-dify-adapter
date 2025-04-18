@@ -1,21 +1,9 @@
 # getbiji-dify-adapter
 dify外接得到Get知识库的工具
 
-使用方式参考：https://mp.weixin.qq.com/s/crQrneHZ0sT-c04YanofSw
-
-## 生成随机 API Key
-
-```shell
-echo "sk-$(openssl rand -hex 16)"
-echo "sk-$(openssl rand -base64 16 | tr -d '/+=')"
-echo "sk-$(uuidgen | tr -d '-')"
-echo "sk-$(date +%s | md5sum | cut -c1-32)"
-echo "sk-$(echo $RANDOM$(date +%s) | sha256sum | cut -c1-32)"
-# API_KEY=sk-u52DLfEleq1Outn1q2Hgg
-```
 # **📌 `.env` 配置文件说明**
 本文件用于配置 **得到Get笔记 Dify 适配器** 的环境变量，所有运行时参数均可通过 `.env` 配置，无需修改代码。  
-适用于 **Docker 部署** 和 **本地开发**，确保灵活性和可维护性。
+适用于 **Docker部署** 和 **本地开发**，确保灵活性和可维护性。
 
 ---
 
@@ -25,11 +13,11 @@ echo "sk-$(echo $RANDOM$(date +%s) | sha256sum | cut -c1-32)"
 ### **🔒 1. API 认证**
 | 变量 | 说明 | 默认值 |
 |------|------|-------|
-| `API_KEY` | 认证 API 请求的密钥，需匹配请求头中的 `Bearer Token` | **必填** |
+| `API_KEY` | 通过得到Get笔记生成，需匹配请求头中的 `Bearer Token` | **必填** |
 
 📌 **示例：**
 ```ini
-API_KEY=sk-8f14e45fceea167a5a36dedd4bea2543
+API_KEY=rlqv4kYDOEYnJoQbee+zE9uyEdttVw9KaH/K0hGONH2vYo/ev4TPkYDOEYnJoQzbnK9WrMlfkYZ8zm196Fe4/6++o8mZalY=
 ```
 
 ---
@@ -37,7 +25,7 @@ API_KEY=sk-8f14e45fceea167a5a36dedd4bea2543
 ### **🌐 2. 服务器配置**
 | 变量 | 说明 | 默认值 |
 |------|------|-------|
-| `PORT` | Flask 服务器运行端口 | `5500` |
+| `PORT` | Flask 服务器运行端口 | `6000` |
 | `GUNICORN_WORKERS` | Gunicorn 进程数（提升并发） | `2` |
 | `GUNICORN_TIMEOUT` | Gunicorn 超时时间（秒） | `60` |
 
