@@ -1,12 +1,9 @@
 services:
-  fastgpt-dify-adapter:
+  getbiji-dify-adapter:
     container_name: getbiji-dify-adapter
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - "$PORT:$PORT"
-    image: registry.cn-guangzhou.aliyuncs.com/kangarooking/getbiji-dify-adapter:latest
+    image: yufeiyohi/getbiji-dify-adapter:latest
     env_file:
       - .env
     restart: unless-stopped

@@ -1,75 +1,48 @@
+# 前人栽树后人乘凉
+此代码根据kangarooking/fastgpt-dify-adapter修改而来，感谢这位兄弟
+
 # getbiji-dify-adapter
-dify外接得到Get知识库的工具
+Dify外接得到Get笔记知识库的工具
 
-使用方式参考：https://mp.weixin.qq.com/s/crQrneHZ0sT-c04YanofSw
-
-## 生成随机 API Key
-
-```shell
-echo "sk-$(openssl rand -hex 16)"
-echo "sk-$(openssl rand -base64 16 | tr -d '/+=')"
-echo "sk-$(uuidgen | tr -d '-')"
-echo "sk-$(date +%s | md5sum | cut -c1-32)"
-echo "sk-$(echo $RANDOM$(date +%s) | sha256sum | cut -c1-32)"
-# API_KEY=sk-u52DLfEleq1Outn1q2Hgg
-```
 # **📌 `.env` 配置文件说明**
-本文件用于配置 **得到Get笔记 Dify 适配器** 的环境变量，所有运行时参数均可通过 `.env` 配置，无需修改代码。  
-适用于 **Docker 部署** 和 **本地开发**，确保灵活性和可维护性。
+本文件用于配置 **得到Get笔记知识库 Dify 适配器** 的环境变量，所有运行时参数均可通过 `.env` 配置，无需修改代码。  
+适用于 **Docker部署** 和 **本地开发**，确保灵活性和可维护性。
 
 ---
 
 ## **📖 变量配置说明**
 以下是所有可用的环境变量及其作用：
 
-### **🔒 1. API 认证**
+### **🌐 1. 服务器配置**
 | 变量 | 说明 | 默认值 |
 |------|------|-------|
-| `API_KEY` | 认证 API 请求的密钥，需匹配请求头中的 `Bearer Token` | **必填** |
-
-📌 **示例：**
-```ini
-API_KEY=sk-8f14e45fceea167a5a36dedd4bea2543
-```
-
----
-
-### **🌐 2. 服务器配置**
-| 变量 | 说明 | 默认值 |
-|------|------|-------|
-| `PORT` | Flask 服务器运行端口 | `5500` |
+| `PORT` | Flask 服务器运行端口 | `6000` |
 | `GUNICORN_WORKERS` | Gunicorn 进程数（提升并发） | `2` |
 | `GUNICORN_TIMEOUT` | Gunicorn 超时时间（秒） | `60` |
 
 📌 **示例：**
 ```ini
-PORT=5500
-GUNICORN_WORKERS=4
-GUNICORN_TIMEOUT=120
+PORT=6000
+GUNICORN_WORKERS=2
+GUNICORN_TIMEOUT=60
 ```
 
 ---
 
-### **🤖 3. FastGPT 相关配置**
+### **🤖 3. Get笔记 相关配置**
 | 变量 | 说明                                                            | 默认值 |
 |------|---------------------------------------------------------------|----|
-| `FASTGPT_BASE_URL` | FastGPT API 地址                                                | `http://host.docker.internal:3000` |
-| `FASTGPT_TIMEOUT` | FastGPT API 请求超时时间（秒）                                         | `30` |
-| `DATASET_SEARCH_USING_EXTENSION` | 是否开启问题优化 (`true/false`)                                       | `true` |
-| `DATASET_SEARCH_EXTENSION_MODEL` | 问题优化所使用的模型 (`GPT-4, Deepseek-chat, etc.`)                     | `Deepseek-chat` |
-| `DATASET_SEARCH_EXTENSION_BG` | 问题优化的背景信息                                                     | （空） |
-| `DATASET_SEARCH_USING_RERANK` | 是否使用 ReRank 重新排序 (`true/false`)                               | `true` |
-| `DATASET_SEARCH_MODE` | 检索模式配置：embedding（语意检索）、fullTextRecall（全文检索）、mixedRecall（混合检索） | `embedding` |
+| `GETBIJI_BASE_URL` | 得到Get笔记 基础 API 地址    | `https://open-api.biji.com/getnote/openapi` |
+| `GETBIJI_TIMEOUT` | 得到Get笔记 API 请求超时时间（秒）       | `30` |
+| `DATASET_INTENT_REWRITE` | 是否开启问题优化 (`true/false`)    | `true` |
+| `DATASET_SELECT_MATRIX` | 是否使用 Get笔记 重新排序（ReRank）（`true/false`）   | `true` |
 
 📌 **示例：**
 ```ini
-FASTGPT_BASE_URL=http://host.docker.internal:3000
-FASTGPT_TIMEOUT=30
-DATASET_SEARCH_USING_EXTENSION=true
-DATASET_SEARCH_EXTENSION_MODEL=Deepseek-chat
-DATASET_SEARCH_EXTENSION_BG=
-DATASET_SEARCH_USING_RERANK=true
-DATASET_SEARCH_MODE=embedding
+GETBIJI_BASE_URL=https://open-api.biji.com/getnote/openapi
+GETBIJI_TIMEOUT=30
+DATASET_INTENT_REWRITE=true
+DATASET_SELECT_MATRIX=true
 ```
 
 ---
@@ -89,31 +62,34 @@ LOG_LEVEL=DEBUG
 ## **🚀 `.env` 文件完整示例**
 ```ini
 # =========================================
-# 🔒 API 认证
-# =========================================
-API_KEY=sk-8f14e45fceea167a5a36dedd4bea2543
-
-# =========================================
 # 🌐 服务器配置
 # =========================================
-PORT=5500
-GUNICORN_WORKERS=4
-GUNICORN_TIMEOUT=120
+# Flask 运行端口（必须与 docker-compose 端口一致）
+PORT=6000
+
+# Gunicorn 配置（提高并发能力）
+GUNICORN_WORKERS=2   # Gunicorn 工作进程数
+GUNICORN_TIMEOUT=60  # Gunicorn 超时时间（秒）
 
 # =========================================
-# 🤖 FastGPT 相关配置
+# 🤖 Get笔记 相关配置
 # =========================================
-FASTGPT_BASE_URL=http://host.docker.internal:3000
-FASTGPT_TIMEOUT=30
-DATASET_SEARCH_USING_EXTENSION=true
-DATASET_SEARCH_EXTENSION_MODEL=Deepseek-chat
-DATASET_SEARCH_EXTENSION_BG=
-DATASET_SEARCH_USING_RERANK=true
-DATASET_SEARCH_MODE=embedding
+# Get笔记 基础 API 地址
+GETBIJI_BASE_URL=https://open-api.biji.com/getnote/openapi
+
+# Get笔记 API 请求超时时间（秒）
+GETBIJI_TIMEOUT=30
+
+# 是否开启问题优化（true/false）
+DATASET_INTENT_REWRITE=true
+
+# 是否使用 Get笔记 重新排序（ReRank）（true/false）
+DATASET_SELECT_MATRIX=true
 
 # =========================================
 # 📜 日志 & 调试
 # =========================================
+# 日志级别（DEBUG, INFO, WARNING, ERROR, CRITICAL）
 LOG_LEVEL=INFO
 ```
 
@@ -126,8 +102,9 @@ LOG_LEVEL=INFO
 version: '3'
 
 services:
-  fastgpt-dify-adapter:
-    image: hotwa/fastgpt-dify-adapter:1.0.0
+  getbiji-dify-adapter:
+    container_name: getbiji-dify-adapter
+    image: yufeiyohi/getbiji-dify-adapter:latest
     env_file:
       - .env
     ports:
@@ -152,10 +129,8 @@ import os
 load_dotenv()
 
 # 读取环境变量
-API_KEY = os.getenv('API_KEY')
-PORT = int(os.getenv('PORT', 5000))
+PORT = int(os.getenv('PORT', 6000))
 
-print(f"API_KEY: {API_KEY}")
 print(f"PORT: {PORT}")
 ```
 
@@ -164,6 +139,6 @@ print(f"PORT: {PORT}")
 ## **🎯 结论**
 ✅ **所有配置均可通过 `.env` 进行管理，无需修改代码**  
 ✅ **适用于 Docker & 本地开发，增强灵活性**  
-✅ **支持 API 认证、FastGPT 配置、日志级别、服务器参数**  
+✅ **支持得到Get笔记 配置、日志级别、服务器参数**  
 
-🚀 **现在，你可以快速配置和管理 FastGPT Dify 适配器！** 🚀
+🚀 **现在，你可以快速配置和管理 得到Get笔记 Dify 适配器！** 🚀
